@@ -15,6 +15,7 @@ import {
 } from "../../agents/embedded-agent-runner/runs.js";
 import { resolveModelAuthMode } from "../../agents/model-auth.js";
 import { isCliProvider } from "../../agents/model-selection.js";
+import { resolveUserFacingSessionProvider } from "../../agents/openai-routing.js";
 import { deriveContextPromptTokens, hasNonzeroUsage, normalizeUsage } from "../../agents/usage.js";
 import { enqueueCommitmentExtraction } from "../../commitments/runtime.js";
 import type { OpenClawConfig } from "../../config/config.js";
@@ -1685,6 +1686,13 @@ export async function runReplyAgent(params: {
     const modelUsed = runResult.meta?.agentMeta?.model ?? fallbackModel ?? defaultModel;
     const providerUsed =
       runResult.meta?.agentMeta?.provider ?? fallbackProvider ?? followupRun.run.provider;
+    const sessionRouteProviderUsed = resolveUserFacingSessionProvider({
+      provider: providerUsed,
+      model: modelUsed,
+      configuredProvider: followupRun.run.provider,
+      fallbackProvider,
+      config: followupRun.run.config,
+    });
     const verboseEnabled = resolvedVerboseLevel !== "off";
     const preserveUserFacingSessionState = shouldPreserveUserFacingSessionStateForInputProvenance(
       followupRun.run.inputProvenance,
@@ -1771,6 +1779,7 @@ export async function runReplyAgent(params: {
       preserveUserFacingSessionModelState: preserveUserFacingSessionState,
       modelUsed,
       providerUsed,
+      sessionRouteProviderUsed,
       contextTokensUsed,
       systemPromptReport: runResult.meta?.systemPromptReport,
       cliSessionId,

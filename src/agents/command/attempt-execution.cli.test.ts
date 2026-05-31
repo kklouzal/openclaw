@@ -1819,7 +1819,7 @@ describe("embedded attempt harness pinning", () => {
     });
   });
 
-  it("routes explicit OpenAI native runs with legacy Codex OAuth through OpenClaw", async () => {
+  it("routes explicit OpenAI native runs with Codex OAuth through OpenClaw without changing the logical provider", async () => {
     const sessionEntry: SessionEntry = {
       sessionId: "explicit-agent-codex-oauth-session",
       updatedAt: Date.now(),

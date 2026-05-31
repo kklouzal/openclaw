@@ -2878,7 +2878,8 @@ export async function runEmbeddedAgent(
             lastTurnTotal,
           });
           const reportedModelRef = resolveReportedModelRef({
-            provider,
+            provider: modelConfigProvider,
+            runtimeProvider: provider,
             model: model.id,
             assistant: sessionLastAssistant,
           });

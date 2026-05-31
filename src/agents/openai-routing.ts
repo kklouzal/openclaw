@@ -86,6 +86,49 @@ export function resolveOpenAIRuntimeProvider(params: {
   return isOpenAIProvider(params.provider) ? OPENAI_PROVIDER_ID : params.provider;
 }
 
+function configRouteUsesCodexRuntime(params: {
+  config?: OpenClawConfig;
+  provider: string;
+  model?: string;
+}): boolean {
+  const model = params.model?.trim();
+  if (!model || normalizeProviderId(params.provider) !== OPENAI_PROVIDER_ID) {
+    return false;
+  }
+  const route = params.config?.agents?.defaults?.models?.[`${OPENAI_PROVIDER_ID}/${model}`];
+  return route?.agentRuntime?.id === "codex";
+}
+
+export function resolveUserFacingSessionProvider(params: {
+  provider: string;
+  model?: string;
+  configuredProvider?: string;
+  fallbackProvider?: string;
+  config?: OpenClawConfig;
+}): string {
+  const provider = normalizeProviderId(params.provider);
+  if (provider !== "openai-codex") {
+    return params.provider;
+  }
+  const configuredProvider = normalizeProviderId(params.configuredProvider ?? "");
+  const fallbackProvider = normalizeProviderId(params.fallbackProvider ?? "");
+  if (fallbackProvider === "openai-codex") {
+    return params.provider;
+  }
+  if (
+    configuredProvider === OPENAI_PROVIDER_ID ||
+    fallbackProvider === OPENAI_PROVIDER_ID ||
+    configRouteUsesCodexRuntime({
+      config: params.config,
+      provider: OPENAI_PROVIDER_ID,
+      model: params.model,
+    })
+  ) {
+    return OPENAI_PROVIDER_ID;
+  }
+  return params.provider;
+}
+
 export function resolveSelectedOpenAIRuntimeProvider(params: {
   provider: string;
   harnessRuntime?: string;

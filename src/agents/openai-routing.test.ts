@@ -7,6 +7,7 @@ import {
   resolveContextConfigProviderForRuntime,
   resolveOpenAIRuntimeProvider,
   resolveSelectedOpenAIRuntimeProvider,
+  resolveUserFacingSessionProvider,
 } from "./openai-routing.js";
 
 describe("OpenAI runtime routing policy", () => {
@@ -223,5 +224,51 @@ describe("OpenAI runtime routing policy", () => {
         harnessRuntime: "codex",
       }),
     ).toBe("anthropic");
+  });
+
+  it("normalizes internal Codex transport providers back to configured OpenAI session routes", () => {
+    expect(
+      resolveUserFacingSessionProvider({
+        provider: "openai-codex",
+        model: "gpt-5.5",
+        configuredProvider: "openai",
+      }),
+    ).toBe("openai");
+    expect(
+      resolveUserFacingSessionProvider({
+        provider: "openai-codex",
+        model: "gpt-5.5",
+        config: {
+          agents: {
+            defaults: {
+              models: {
+                "openai/gpt-5.5": { agentRuntime: { id: "codex" } },
+              },
+            },
+          },
+        } satisfies OpenClawConfig,
+      }),
+    ).toBe("openai");
+  });
+
+  it("preserves explicit openai-codex session routes", () => {
+    expect(
+      resolveUserFacingSessionProvider({
+        provider: "openai-codex",
+        model: "gpt-5.5",
+        configuredProvider: "openai-codex",
+      }),
+    ).toBe("openai-codex");
+  });
+
+  it("preserves explicit final openai-codex fallbacks from configured OpenAI routes", () => {
+    expect(
+      resolveUserFacingSessionProvider({
+        provider: "openai-codex",
+        model: "gpt-5.5",
+        configuredProvider: "openai",
+        fallbackProvider: "openai-codex",
+      }),
+    ).toBe("openai-codex");
   });
 });
