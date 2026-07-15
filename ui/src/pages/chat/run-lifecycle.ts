@@ -448,6 +448,17 @@ export function reconcileChatRunFromSessionRow(
   if (isSessionRunActive(row)) {
     return false;
   }
+  if (row.hasActiveRun === false && row.status === "running") {
+    reconcileChatRunLifecycle(host, {
+      yielded: true,
+      runId: host.chatRunId,
+      sessionKey: host.sessionKey,
+      sessionKeys: [row.key],
+      clearLocalRun: true,
+      clearChatStream: true,
+    });
+    return true;
+  }
   // Transcript snapshots can briefly lose the active-run projection while the
   // persisted lifecycle is still running. Wait for a real terminal status so
   // tool updates cannot flash an interrupted composer state mid-turn.

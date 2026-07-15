@@ -177,6 +177,19 @@ describe("session lifecycle state", () => {
       status: "timeout",
       abortedLastRun: false,
     },
+    {
+      name: "status-bearing end_turn with stale yield metadata",
+      data: {
+        phase: "end",
+        endedAt: 1_800,
+        status: "completed",
+        yielded: true,
+        livenessState: "paused",
+        stopReason: "end_turn",
+      },
+      status: "done",
+      abortedLastRun: false,
+    },
   ] as const)("persists $name terminal state", async ({ data, status, abortedLastRun }) => {
     const persisted = await persistLifecycle(
       {

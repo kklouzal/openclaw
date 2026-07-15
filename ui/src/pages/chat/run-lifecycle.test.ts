@@ -88,6 +88,32 @@ describe("reconcileChatRunLifecycle yielded parent", () => {
       status: "running",
     });
   });
+
+  it("treats a canonical running/no-active session row as yielded, not interrupted", () => {
+    const host = makeHost({ chatRunId: "r1", chatStream: "Waiting for child completion." });
+
+    expect(
+      reconcileChatRunFromSessionRow(host, {
+        key: "s1",
+        kind: "direct",
+        updatedAt: 1,
+        hasActiveRun: false,
+        status: "running",
+      }),
+    ).toBe(true);
+
+    expect(host).toMatchObject({
+      chatRunId: null,
+      chatStream: null,
+      chatRunStatus: null,
+      lastLocalTerminalReconcile: null,
+    });
+    expect(host.sessionsResult?.sessions[0]).toMatchObject({
+      activeRunIds: [],
+      hasActiveRun: false,
+      status: "running",
+    });
+  });
 });
 
 describe("reconcileChatRunFromCurrentSessionRow stale-active suppression (#87875)", () => {

@@ -4712,37 +4712,47 @@ describe("agent event handler", () => {
       });
     });
 
-    it("does not let stale yield metadata override an aborted lifecycle", () => {
+    it.each([
+      {
+        name: "aborted",
+        data: { aborted: true },
+        expectedState: "error" as const,
+      },
+      {
+        name: "status-bearing completed",
+        data: { status: "completed" },
+        expectedState: "final" as const,
+      },
+    ])("does not let stale yield metadata override $name lifecycle", ({ data, expectedState }) => {
       const { broadcast, handler, chatRunState } = createHarness({
         resolveSessionKeyForRun: () => "agent:main:main",
       });
+      const runId = `run-stale-yield-${expectedState}`;
+      const clientRunId = `client-stale-yield-${expectedState}`;
+      chatRunState.registry.add(runId, { sessionKey: "agent:main:main", clientRunId });
 
-      chatRunState.registry.add("run-aborted", {
-        sessionKey: "agent:main:main",
-        clientRunId: "client-aborted",
-      });
       handler({
-        runId: "run-aborted",
+        runId,
         seq: 1,
         stream: "lifecycle",
         ts: Date.now(),
         data: {
           phase: "end",
-          aborted: true,
           yielded: true,
           livenessState: "paused",
           stopReason: "end_turn",
+          ...data,
         },
       });
 
       const finalCall = requireCall(
-        chatBroadcastCalls(broadcast).find(([, payload]) => payload.state === "error"),
-        "aborted final chat call",
+        chatBroadcastCalls(broadcast).find(([, payload]) => payload.state === expectedState),
+        "terminal chat call",
       );
       expectPayloadFields(finalCall[1], {
-        runId: "client-aborted",
+        runId: clientRunId,
         sessionKey: "agent:main:main",
-        state: "error",
+        state: expectedState,
         stopReason: "end_turn",
       });
       expect(finalCall[1]).not.toHaveProperty("yielded");

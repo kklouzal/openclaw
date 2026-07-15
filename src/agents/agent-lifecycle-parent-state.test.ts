@@ -37,6 +37,20 @@ describe("agent lifecycle parent state", () => {
       yielded: true,
       livenessState: "paused",
       stopReason: "end_turn",
+      status: "timed_out",
+    },
+    {
+      phase: "end",
+      yielded: true,
+      livenessState: "paused",
+      stopReason: "end_turn",
+      status: "completed",
+    },
+    {
+      phase: "end",
+      yielded: true,
+      livenessState: "paused",
+      stopReason: "end_turn",
       timeoutPhase: "provider",
     },
     {

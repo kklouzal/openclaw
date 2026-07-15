@@ -17,8 +17,7 @@ export function isAgentLifecycleYieldedWaiting(event: AgentLifecycleParentStateE
     event.livenessState === "paused" &&
     event.stopReason === "end_turn" &&
     event.aborted !== true &&
-    event.status !== "cancelled" &&
-    event.status !== "timed_out" &&
+    event.status == null &&
     event.timeoutPhase == null &&
     event.error == null
   );
